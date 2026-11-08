@@ -1,0 +1,59 @@
+captainVersion: 4
+services:
+    $$cap_appname:
+        image: romanvaxman/bananana-brain:$$cap_bananana_version
+        environment:
+            BANANANA_SETUP_TOKEN: '$$cap_setup_token'
+            TZ: $$cap_tz
+            # The LAN dashboard only answers requests addressed to its own port, so the
+            # container listens on the same port that is published on the host.
+            BANANANA_LAN_PORT: '$$cap_lan_port'
+        volumes:
+            - $$cap_appname-data:/data
+        ports:
+            - $$cap_lan_port:$$cap_lan_port
+        caproverExtra:
+            # The brain is reached at https://<your-name>.bananana.dev through an outbound,
+            # end-to-end encrypted relay, so it needs no CapRover domain. Its only local page is
+            # the HTTPS (self-signed) LAN dashboard, published directly above: there is no
+            # plain-HTTP port for CapRover's nginx to proxy to.
+            notExposeAsWebApp: 'true'
+caproverOneClickApp:
+    variables:
+        - id: $$cap_bananana_version
+          label: bananana brain version
+          defaultValue: 2026.11.5
+          description: Check out the Docker page for the valid tags https://hub.docker.com/r/romanvaxman/bananana-brain/tags
+          validRegex: /^([^\s^\/])+$/
+        - id: $$cap_setup_token
+          label: Setup token
+          defaultValue: ''
+          description: From https://bananana.dev/start (starts with bst_). Only used on the first start. You can leave it empty and add it later in App Configs.
+          validRegex: /^(bst_\S+)?$/
+        - id: $$cap_lan_port
+          label: LAN dashboard port
+          defaultValue: '18771'
+          description: Host port for the brain's HTTPS dashboard on your network (self-signed certificate), used when the internet or bananana.dev is down.
+          validRegex: /^([1-9]\d{0,4})$/
+        - id: $$cap_tz
+          label: Timezone
+          defaultValue: Etc/UTC
+          description: Used for the nightly backup at 04:10. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+          validRegex: /^([^\s])+$/
+    instructions:
+        start: |-
+            The bananana brain is your own control room for your servers, Macs and PCs. It keeps your machines' live readings, alerts, automations, files, terminals and history on your server, not in someone's cloud, and you reach it from anywhere at your-name.bananana.dev and in the bananana.dev apps for iPhone and Android, without opening ports or setting up a VPN: it connects out through an end-to-end encrypted relay.
+
+            First create a free account at https://bananana.dev/start and copy the setup token it shows (it starts with bst_). Paste it into Setup token below; it's only used on the first start.
+        end: |-
+            The bananana brain is deployed as $$cap_appname.
+
+            It isn't exposed as a CapRover web app on purpose: open it at the address bananana.dev gave you (https://your-name.bananana.dev) or in the bananana.dev apps. It connects out to bananana.dev on its own, so there's no domain or HTTPS to set up here.
+
+            On your network, its dashboard is also at https://<this-server-ip>:$$cap_lan_port (self-signed certificate, same sign-in).
+
+            If you left the setup token empty, add BANANANA_SETUP_TOKEN in the app's App Configs and save. Then add your other machines from the brain's Nodes page. Keep the $$cap_appname-data volume backed up: it holds the brain's identity, settings, users and history.
+    displayName: bananana brain
+    isOfficial: true
+    description: Your own control room for servers, Macs and PCs, reachable from anywhere at your-name.bananana.dev through an encrypted relay, with no open ports or VPN.
+    documentation: https://bananana.dev/help/docker
